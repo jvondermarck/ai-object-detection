@@ -10,7 +10,8 @@ Image detection AI with a neural networks to detect some sodas.
 2. Clone the project from GitHub and open it via PyCharm
 3. Set up the virtual environment and do not forget to activate it before running the project
 4. Install the required packages via `pip install -r requirements.txt`
-5. Run the project via `python main.py`
+5. Copy `.env.example` to `.env` and setup your environment variables
+6. Run the project via `python main.py`
 
 ### Usage of pre-commit
 

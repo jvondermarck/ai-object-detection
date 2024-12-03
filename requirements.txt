@@ -3,4 +3,5 @@ mypy
 picsellia
 pillow
 pre-commit
+python-dotenv
 ruff
