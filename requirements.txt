@@ -1,5 +1,6 @@
-﻿pre-commit
-ruff
-isort
+﻿isort
 mypy
-Pillow
+picsellia
+pillow
+pre-commit
+ruff
