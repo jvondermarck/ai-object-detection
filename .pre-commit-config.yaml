@@ -23,3 +23,10 @@ repos:
   rev: v1.13.0
   hooks:
     - id: mypy
+      args:
+        - --non-interactive
+        - --install-types
+        - --check-untyped-defs
+        - --ignore-missing-imports
+      exclude: ^tests/
+      additional_dependencies: ['types-PyYAML']
