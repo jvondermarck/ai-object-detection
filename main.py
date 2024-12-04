@@ -177,8 +177,7 @@ hyperparameters = {
     "weight_decay": 0.0005,  # Décroissance de poids pour éviter le surapprentissage
     "seed": 42,  # Reproductibilité
     "augment": True,  # Augmentation des données pour enrichir l'entraînement
-    "cache": True,  # Charger les données en mémoire pour accélérer l'entraînement
-    "label_smoothing": 0.1,  # Lissage des labels pour une meilleure généralisation
+    "cache": "ram",  # Charger les données en mémoire pour accélérer l'entraînement
 }
 
 # Charger les données d'entraînement avec le fichier config.yaml
@@ -187,6 +186,7 @@ print("Chargement du fichier config.yaml :", data_yaml_path)
 model.train(
     data=data_yaml_path,  # Chemin vers votre fichier config.yaml
     **hyperparameters,  # Appliquez les hyper-paramètres
+    project="./results",
 )
 
 print("Entraînement YOLOv11 lancé avec succès.")
