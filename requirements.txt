@@ -4,4 +4,7 @@ picsellia
 pillow
 pre-commit
 python-dotenv
+PyYAML
 ruff
+types-PyYAML
+ultralytics
