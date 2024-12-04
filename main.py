@@ -7,6 +7,7 @@ import yaml
 from dotenv import load_dotenv
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
+from ultralytics import YOLO
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -143,17 +144,49 @@ names = data.get("names", [f"class{i}" for i in range(nc)])  # Liste des noms de
 
 # Étape 3 : Générer le fichier config.yaml en utilisant les données du data.yaml
 config = {
-    "train": f"{images_dir}/train",
-    "val": f"{images_dir}/val",
-    "test": f"{images_dir}/test",
+    "train": os.path.abspath(f"{images_dir}/train"),
+    "val": os.path.abspath(f"{images_dir}/val"),
+    "test": os.path.abspath(f"{images_dir}/test"),
     "nc": nc,  # Nombre de classes récupéré depuis data.yaml
     "names": names,  # Liste des classes récupérée depuis data.yaml
 }
 
 # Sauvegarder le fichier config.yaml
-config_path = f"{output_dir}/config.yaml"
+config_path = os.path.abspath(f"{output_dir}/config.yaml")
 with open(config_path, "w") as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False)
 
 print("Dataset structuré avec succès et fichier config.yaml généré.")
-print(f"Chemin du fichier config.yaml : {config_path}")
+print(f"Chemin absolu du fichier config.yaml : {config_path}")
+
+# Charger le modèle YOLOv11 (assurez-vous que vous avez la bonne version de YOLO)
+model = YOLO(
+    "yolo11n.pt"
+)  # Utilisez yolov11.yaml ou un autre modèle YOLOv11 pré-entrainé
+
+model.to("mps")  # Utiliser le GPU pour l'entraînement
+# Définir les hyper-paramètres
+hyperparameters = {
+    "epochs": 5,  # Augmenter légèrement pour une meilleure convergence
+    "batch": 8,  # Ajuster selon la mémoire disponible (tester 8 ou 4 si limite)
+    "imgsz": 512,  # Réduire la taille des images pour économiser la mémoire
+    "close_mosaic": 0,  # Activer si vous voulez plus de stabilité, sinon désactiver (0)
+    "optimizer": "AdamW",  # Utiliser un optimiseur efficace (AdamW recommandé)
+    "lr0": 0.001,  # Learning rate initial légèrement réduit pour stabilité
+    "momentum": 0.937,  # Momentum standard pour YOLO (reste optimal)
+    "weight_decay": 0.0005,  # Décroissance de poids pour éviter le surapprentissage
+    "seed": 42,  # Reproductibilité
+    "augment": True,  # Augmentation des données pour enrichir l'entraînement
+    "cache": True,  # Charger les données en mémoire pour accélérer l'entraînement
+    "label_smoothing": 0.1,  # Lissage des labels pour une meilleure généralisation
+}
+
+# Charger les données d'entraînement avec le fichier config.yaml
+data_yaml_path = "./datasets/structured/config.yaml"
+print("Chargement du fichier config.yaml :", data_yaml_path)
+model.train(
+    data=data_yaml_path,  # Chemin vers votre fichier config.yaml
+    **hyperparameters,  # Appliquez les hyper-paramètres
+)
+
+print("Entraînement YOLOv11 lancé avec succès.")
