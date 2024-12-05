@@ -1,4 +1,5 @@
 import os
+import platform
 import random
 import shutil
 import zipfile
@@ -164,7 +165,17 @@ model = YOLO(
     "yolo11n.pt"
 )  # Utilisez yolov11.yaml ou un autre modèle YOLOv11 pré-entrainé
 
-model.to("mps")  # Utiliser le GPU pour l'entraînement
+os_name = platform.system()
+
+if os_name == "Windows" or os_name == "Linux":
+    print("Le système d'exploitation est : Windows ou Linux")
+    model.to("conda")  # Utiliser le GPU NVIDIA pour l'entraînement
+elif os_name == "Darwin":
+    print("Le système d'exploitation est : macOS")
+    model.to("mps")  # Utiliser le GPU d'Apple M1+ pour l'entraînement
+else:
+    print(f"Système d'exploitation non reconnu : {os_name}")
+
 # Définir les hyper-paramètres
 hyperparameters = {
     "epochs": 5,  # Augmenter légèrement pour une meilleure convergence
