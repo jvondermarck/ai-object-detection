@@ -169,7 +169,7 @@ os_name = platform.system()
 
 if os_name == "Windows" or os_name == "Linux":
     print("Le système d'exploitation est : Windows ou Linux")
-    model.to("conda")  # Utiliser le GPU NVIDIA pour l'entraînement
+    model.to("cuda")  # Utiliser le GPU NVIDIA pour l'entraînement
 elif os_name == "Darwin":
     print("Le système d'exploitation est : macOS")
     model.to("mps")  # Utiliser le GPU d'Apple M1+ pour l'entraînement
