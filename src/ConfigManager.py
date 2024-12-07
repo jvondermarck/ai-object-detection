@@ -12,7 +12,7 @@ class ConfigManager:
     """
 
     @staticmethod
-    def load_environment():
+    def load_environment() -> None:
         """Loads environment variables from a .env file."""
         load_dotenv()
 

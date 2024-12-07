@@ -11,7 +11,7 @@ class YOLOManager:
         train: Trains the YOLO model with custom parameters.
     """
 
-    def __init__(self, model_path: str):
+    def __init__(self, model_path: str) -> None:
         """Initializes the YOLO manager.
 
         Args:
@@ -19,7 +19,7 @@ class YOLOManager:
         """
         self.model = YOLO(model_path)
 
-    def configure_hardware(self):
+    def configure_hardware(self) -> None:
         """Configures hardware for running the model (GPU or CPU).
 
         Raises:
@@ -33,7 +33,7 @@ class YOLOManager:
         else:
             raise ValueError(f"Unrecognized operating system: {os_name}")
 
-    def train(self, config_path: str, hyperparameters: dict, project_path: str):
+    def train(self, config_path: str, hyperparameters: dict, project_path: str) -> None:
         """Trains the YOLO model.
 
         Args:

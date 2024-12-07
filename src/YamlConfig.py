@@ -23,7 +23,7 @@ class YAMLConfig:
             return yaml.safe_load(f)
 
     @staticmethod
-    def save_yaml(data: dict, file_path: str):
+    def save_yaml(data: dict, file_path: str) -> None:
         """Saves data to a YAML file.
 
         Args:

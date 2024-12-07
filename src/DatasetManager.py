@@ -23,7 +23,7 @@ class DatasetManager:
         structure_data_for_yolo: Structures data for YOLO based on given ratios.
     """
 
-    def __init__(self, base_dir: str, id_version: str):
+    def __init__(self, base_dir: str, id_version: str) -> None:
         """Initializes a dataset manager.
 
         Args:
@@ -35,7 +35,7 @@ class DatasetManager:
         self.annotations_dir = os.path.join(base_dir, "annotations")
         self.structured_dir = os.path.join(base_dir, "structured")
 
-    def download_dataset(self, client: Client, dataset_id: str):
+    def download_dataset(self, client: Client, dataset_id: str) -> None:
         """Downloads a dataset from Picsellia.
 
         Args:
@@ -45,7 +45,7 @@ class DatasetManager:
         dataset = client.get_dataset_version_by_id(dataset_id)
         dataset.list_assets().download(self.base_dir)
 
-    def export_annotations(self, dataset, export_format: AnnotationFileType):
+    def export_annotations(self, dataset, export_format: AnnotationFileType) -> None:
         """Exports annotations in a given format.
 
         Args:
@@ -56,14 +56,14 @@ class DatasetManager:
             export_format, os.path.join(self.base_dir, "annotations.zip")
         )
 
-    def extract_zip(self):
+    def extract_zip(self) -> None:
         """Extracts ZIP files found in the base directory.
 
         Raises:
             FileNotFoundError: If no ZIP file is found.
         """
         zip_file = self._find_zip_file()
-        if zip_file:
+        if zip_file != "":
             os.makedirs(self.annotations_dir, exist_ok=True)
             with zipfile.ZipFile(zip_file, "r") as zip_ref:
                 zip_ref.extractall(self.annotations_dir)
@@ -71,7 +71,7 @@ class DatasetManager:
         else:
             raise FileNotFoundError("No ZIP archive found.")
 
-    def structure_data_for_yolo(self, split_ratios: dict):
+    def structure_data_for_yolo(self, split_ratios: dict) -> tuple[dict, dict]:
         """Structures data for the YOLO model.
 
         Args:
@@ -98,19 +98,19 @@ class DatasetManager:
 
         return images_dir, labels_dir
 
-    def _find_zip_file(self):
+    def _find_zip_file(self) -> str:
         """Searches for a ZIP file in the base directory.
 
         Returns:
-            str: Path to the ZIP file, or None if no file is found.
+            str: Path to the ZIP file, or an empty string if not found.
         """
         for root, _, files in os.walk(self.base_dir):
             for file in files:
                 if file.endswith(".zip"):
                     return os.path.join(root, file)
-        return None
+        return ""
 
-    def _prepare_directories(self):
+    def _prepare_directories(self) -> tuple[dict, dict]:
         """Prepares directories for images and labels.
 
         Returns:
@@ -132,7 +132,7 @@ class DatasetManager:
 
         return images_dir, labels_dir
 
-    def _pair_images_and_labels(self):
+    def _pair_images_and_labels(self) -> list[tuple[str, str]]:
         """Pairs images with their corresponding label files.
 
         Returns:
@@ -150,7 +150,7 @@ class DatasetManager:
         image_to_label = {img: img.rsplit(".", 1)[0] + ".txt" for img in image_files}
         return [(img, lbl) for img, lbl in image_to_label.items() if lbl in label_files]
 
-    def _split_data(self, paired_files, split_ratios):
+    def _split_data(self, paired_files, split_ratios) -> dict:
         """Splits data into splits (train, val, test).
 
         Args:
