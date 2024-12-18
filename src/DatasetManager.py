@@ -43,7 +43,7 @@ class DatasetManager:
             dataset_id (str): Dataset identifier.
         """
         dataset = client.get_dataset_version_by_id(dataset_id)
-        dataset.list_assets().download(self.base_dir)
+        dataset.list_assets().download(self.base_dir, use_id=True)
 
     def export_annotations(self, dataset, export_format: AnnotationFileType) -> None:
         """Exports annotations in a given format.
@@ -53,7 +53,7 @@ class DatasetManager:
             export_format (AnnotationFileType): Format for annotation export.
         """
         dataset.export_annotation_file(
-            export_format, os.path.join(self.base_dir, "annotations.zip")
+            export_format, os.path.join(self.base_dir, "annotations.zip"), use_id=True
         )
 
     def extract_zip(self) -> None:
