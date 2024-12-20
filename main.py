@@ -1,19 +1,22 @@
 import os
 
+from dotenv import load_dotenv
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
 
-from src.ConfigManager import ConfigManager
 from src.DatasetManager import DatasetManager
 from src.YamlConfig import YAMLConfig
 from src.YoloManager import YOLOManager
 
 
 def main():
-    ConfigManager.load_environment()
+    load_dotenv()
 
     # Initialize clients and paths
-    api_token = ConfigManager.get_env_variable("PICSELLIA_API_TOKEN")
+    api_token = os.getenv("PICSELLIA_API_TOKEN")
+    if not api_token:
+        raise ValueError("Environment variable 'PICSELLIA_API_TOKEN' is missing.")
+
     client = Client(api_token=api_token, organization_name="Picsalex-MLOps")
     dataset_manager = DatasetManager(
         base_dir="./datasets", id_version="0193688e-aa8f-7cbe-9396-bec740a262d0"
