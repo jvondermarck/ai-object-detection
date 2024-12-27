@@ -13,6 +13,8 @@ Image detection AI with a neural networks to detect some sodas.
 5. Copy `.env.example` to `.env` and setup your environment variables
 6. Run the project via `python main.py`
 
+> You can find the API Token of Picsellia in Personal Settings > Tokens
+
 ### Usage of pre-commit
 
 1. Install pre-commit via `pip install pre-commit` (if not already installed via the requirements.txt)
