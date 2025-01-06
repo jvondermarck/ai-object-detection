@@ -21,7 +21,7 @@ def main():
     dataset_manager = DatasetManager(
         base_dir="./datasets", id_version="0193688e-aa8f-7cbe-9396-bec740a262d0"
     )
-    yolo_manager = YOLOManager(model_path="yolo11n.pt")
+    yolo_manager = YOLOManager(model_path="yolo11n.pt", experiment=experiment)
 
     # Download dataset
     dataset_manager.download_dataset(client, dataset_manager.id_version)
