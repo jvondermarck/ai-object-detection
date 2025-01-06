@@ -10,7 +10,9 @@ Image detection AI with a neural networks to detect some sodas.
 2. Clone the project from GitHub and open it via PyCharm
 3. Set up the virtual environment and do not forget to activate it before running the project
 4. Install the required packages via `pip install -r requirements.txt`
-5. Copy `.env.example` to `.env` and setup your environment variables
+   - On windows, type this command `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124` and also do not forget to install Cuda.
+   - https://pytorch.org/get-started/locally/#start-locally for more information on which PyTorch version to install
+6. Copy `.env.example` to `.env` and setup your environment variables
 6. Run the project via `python main.py`
 
 > You can find the API Token of Picsellia in Personal Settings > Tokens
@@ -27,6 +29,7 @@ Image detection AI with a neural networks to detect some sodas.
 
 - Python 3.11
 - PyCharm
+- Cuda for Windows
 
 ## Run the project
 
