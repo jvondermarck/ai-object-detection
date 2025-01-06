@@ -113,6 +113,7 @@ def main():
     YAMLConfig.save_yaml(config_data, config_path)
 
     yolo_manager.train(config_path, hyperparameters, project_path="./results")
+    yolo_manager.evaluate(config_path)
 
 
 if __name__ == "__main__":

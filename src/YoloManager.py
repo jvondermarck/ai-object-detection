@@ -30,6 +30,8 @@ class YOLOManager:
         if torch.backends.mps.is_available():
             self.model.to("mps")
 
+        self.add_callbacks()
+
     def train(self, config_path: str, hyperparameters: dict, project_path: str) -> None:
         """Trains the YOLO model.
 
@@ -38,8 +40,15 @@ class YOLOManager:
             hyperparameters (dict): Custom hyperparameters for training.
             project_path (str): Path to save training results.
         """
-        self.add_callbacks()
         self.model.train(data=config_path, project=project_path, **hyperparameters)
+
+    def evaluate(self, config_path: str) -> None:
+        """Evaluates the YOLO model.
+
+        Args:
+            config_path (str): Path to the dataset configuration file.
+        """
+        self.model.val(data=config_path)
 
     def add_callbacks(self) -> None:
         """Adds custom callbacks to the model."""
@@ -50,4 +59,12 @@ class YOLOManager:
                 self.experiment.log(metric_name, [metric_value], LogType.LINE)
                 print(f"{metric_name} logged to Picsellia: {metric_value:.3f}")
 
+        def on_val_end(trainer):
+            metrics = trainer.get_stats()
+            for metric_name, metric_value in metrics.items():
+                metric_value = float(metric_value)
+                self.experiment.log(metric_name, [metric_value], LogType.LINE)
+                print(f"{metric_name} logged to Picsellia: {metric_value:.3f}")
+
         self.model.add_callback("on_train_epoch_end", on_train_epoch_end)
+        self.model.add_callback("on_val_end", on_val_end)
