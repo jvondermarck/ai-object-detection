@@ -1,7 +1,6 @@
-import platform
-
 from picsellia import Experiment
 from picsellia.types.enums import LogType
+import torch
 from ultralytics import YOLO
 
 
@@ -20,22 +19,14 @@ class YOLOManager:
             model_path (str): Path to the pre-trained or custom YOLO model.
             experiment: Picsellia experiment object.
         """
+
         self.model = YOLO(model_path)
-        self.experiment = experiment
-
-    def configure_hardware(self) -> None:
-        """Configures hardware for running the model (GPU or CPU).
-
-        Raises:
-            ValueError: If the operating system is not supported.
-        """
-        os_name = platform.system()
-        if os_name in ["Windows", "Linux"]:
+        if torch.cuda.is_available():
             self.model.to("cuda")
-        elif os_name == "Darwin":
+            return
+
+        if torch.backends.mps.is_available():
             self.model.to("mps")
-        else:
-            raise ValueError(f"Unrecognized operating system: {os_name}")
 
     def train(self, config_path: str, hyperparameters: dict, project_path: str) -> None:
         """Trains the YOLO model.
