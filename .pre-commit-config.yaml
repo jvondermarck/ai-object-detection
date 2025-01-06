@@ -14,11 +14,9 @@ repos:
   hooks:
     - id: ruff # Run linter
       args: [ --fix ] # To enable lint fixes for pep8
+    - id: ruff
+      args: ["check", "--select", "I", "--fix"]
     - id: ruff-format # Run formatter
--   repo: https://github.com/pycqa/isort # an import sorter for python
-    rev: 5.13.2
-    hooks:
-    -   id: isort
 - repo: https://github.com/pre-commit/mirrors-mypy # For type hints
   rev: v1.13.0
   hooks:
