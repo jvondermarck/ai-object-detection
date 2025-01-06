@@ -53,7 +53,6 @@ def main():
     YAMLConfig.save_yaml(config_data, config_path)
 
     # Train the model
-    yolo_manager.configure_hardware()
     hyperparameters = {
         "epochs": 20,
         "batch": 32,
