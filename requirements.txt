@@ -8,3 +8,6 @@ PyYAML
 ruff
 types-PyYAML
 ultralytics
+
+torch~=2.5.1+cu124
+opencv-python~=4.10.0.84
