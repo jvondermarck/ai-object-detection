@@ -1,6 +1,6 @@
+import torch
 from picsellia import Experiment
 from picsellia.types.enums import LogType
-import torch
 from ultralytics import YOLO
 
 
@@ -21,6 +21,8 @@ class YOLOManager:
         """
 
         self.model = YOLO(model_path)
+        self.experiment = experiment
+
         if torch.cuda.is_available():
             self.model.to("cuda")
             return
