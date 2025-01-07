@@ -1,11 +1,16 @@
 import hashlib
 import os
 
-from dotenv import load_dotenv
 from picsellia import Client, DatasetVersion, Experiment, Project
 from picsellia.exceptions import ResourceNotFoundError
 from picsellia.types.enums import AnnotationFileType
 
+from src.config import (
+    PICSELLIA_API_TOKEN,
+    PICSELLIA_DATASET_VERSION,
+    PICSELLIA_ORGANIZATION_NAME,
+    PICSELLIA_PROJECT_ID,
+)
 from src.DatasetManager import DatasetManager
 from src.YamlConfig import YAMLConfig
 from src.YoloManager import YOLOManager
@@ -34,25 +39,6 @@ def get_or_create_experiment(
 
 
 def main():
-    load_dotenv()
-
-    # Environment variables
-    PICSELLIA_API_TOKEN = os.getenv("PICSELLIA_API_TOKEN")
-    if not PICSELLIA_API_TOKEN:
-        raise ValueError("Missing 'PICSELLIA_API_TOKEN' environment variable.")
-
-    PICSELLIA_ORGANIZATION_NAME = os.getenv("PICSELLIA_ORGANIZATION_NAME")
-    if not PICSELLIA_ORGANIZATION_NAME:
-        raise ValueError("Missing 'PICSELLIA_ORGANIZATION_NAME' environment variable.")
-
-    PICSELLIA_PROJECT_ID = os.getenv("PICSELLIA_PROJECT_ID")
-    if not PICSELLIA_PROJECT_ID:
-        raise ValueError("Missing 'PICSELLIA_PROJECT_ID' environment variable.")
-
-    PICSELLIA_DATASET_VERSION = os.getenv("PICSELLIA_DATASET_VERSION")
-    if not PICSELLIA_DATASET_VERSION:
-        raise ValueError("Missing 'PICSELLIA_DATASET_VERSION' environment variable.")
-
     # Hyperparameters
     hyperparameters = {
         "epochs": 20,
