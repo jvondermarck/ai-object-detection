@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from picsellia import Client, DatasetVersion, Experiment, Project
 from picsellia.exceptions import ResourceNotFoundError
+from picsellia.types.enums import AnnotationFileType
 
 from src.DatasetManager import DatasetManager
 from src.YamlConfig import YAMLConfig
@@ -83,14 +84,14 @@ def main():
     yolo_manager = YOLOManager(model_path="yolo11n.pt", experiment=experiment)
 
     # Download dataset
-    # dataset_manager.download_dataset(client, dataset_manager.id_version)
+    dataset_manager.download_dataset(client, dataset_manager.id_version)
 
     # Structure and export data
-    # dataset_manager.export_annotations(
-    #     client.get_dataset_version_by_id(dataset_manager.id_version),
-    #     AnnotationFileType.YOLO,
-    # )
-    # dataset_manager.extract_zip()
+    dataset_manager.export_annotations(
+        client.get_dataset_version_by_id(dataset_manager.id_version),
+        AnnotationFileType.YOLO,
+    )
+    dataset_manager.extract_zip()
 
     split_ratios = {"train": 0.6, "val": 0.2, "test": 0.2}
     images_dir, labels_dir = dataset_manager.structure_data_for_yolo(split_ratios)
@@ -111,8 +112,8 @@ def main():
     config_path = os.path.join(dataset_manager.structured_dir, "config.yaml")
     YAMLConfig.save_yaml(config_data, config_path)
 
-    # yolo_manager.train(config_path, hyperparameters, project_path="./results")
-    # yolo_manager.evaluate_metrics(config_path)
+    yolo_manager.train(config_path, hyperparameters, project_path="./results")
+    yolo_manager.evaluate_metrics(config_path)
     yolo_manager.evaluate_model(config_path)
 
 
