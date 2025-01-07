@@ -1,15 +1,27 @@
 import logging
 
 import cv2
+from picsellia import Client
 from ultralytics import YOLO
+
+from config import (
+    PICSELLIA_API_TOKEN,
+    PICSELLIA_ORGANIZATION_NAME,
+)
 
 # Configure Ultralytics logs to avoid displaying unnecessary information
 logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
-# Load the custom YOLO model
-model = YOLO(
-    "../best.pt"
-)  # Replace "best.pt" with the path to your model and get it from Picsellia
+
+client = Client(
+    api_token=PICSELLIA_API_TOKEN, organization_name=PICSELLIA_ORGANIZATION_NAME
+)
+
+model_version_id = "01943c53-956c-775b-afd1-38e9f87ed22e"
+model_version = client.get_model_version_by_id(model_version_id)
+model_version.get_file("model").download()
+
+model = YOLO("best.pt")
 
 # Open the webcam
 cap = cv2.VideoCapture(0)
@@ -21,7 +33,6 @@ if not cap.isOpened():
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("Error: Unable to read the image.")
         break
 
     # Perform inference with YOLO
