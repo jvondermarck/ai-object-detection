@@ -51,6 +51,7 @@ def main():
         "seed": 42,
         "augment": True,
         "cache": "ram",
+        "close_mosaic": 0,
     }
 
     # Initialize the client, get project and dataset, create an experiment, attach the dataset to the experiment
