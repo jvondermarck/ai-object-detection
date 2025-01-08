@@ -2,9 +2,10 @@ import os
 
 import torch
 import yaml
-from picsellia import Experiment
+from picsellia import Experiment, Model
 from picsellia.types.enums import AddEvaluationType, InferenceType, LogType
 from ultralytics import YOLO
+from ultralytics.models.yolo.detect import DetectionValidator
 
 
 class YOLOManager:
@@ -123,8 +124,9 @@ class YOLOManager:
                 self.experiment.log(metric_name, [metric_value], LogType.LINE)
                 print(f"{metric_name} logged to Picsellia: {metric_value:.3f}")
 
-        def on_val_end(trainer):
-            metrics = trainer.get_stats()
+        def on_val_end(trainer: DetectionValidator):
+            metrics = trainer.metrics
+            print("Metrics:", metrics)
             for metric_name, metric_value in metrics.items():
                 metric_value = float(metric_value)
                 self.experiment.log(metric_name, [metric_value], LogType.LINE)
@@ -132,3 +134,9 @@ class YOLOManager:
 
         self.model.add_callback("on_train_epoch_end", on_train_epoch_end)
         self.model.add_callback("on_val_end", on_val_end)
+
+    def export_model_version(self, base_model: Model) -> None:
+        """Exports the model in the model registry."""
+        new_model = self.experiment.export_in_existing_model(base_model)
+        new_model.store("config", "args.yaml")
+        new_model.store("model", "best.pt")

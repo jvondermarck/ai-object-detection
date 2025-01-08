@@ -63,6 +63,7 @@ def main():
     experiment_name = generate_experiment_name(hyperparameters, dataset_version)
     experiment = get_or_create_experiment(project, dataset_version, experiment_name)
     print(experiment)
+    base_model = client.get_model("Groupe_7")
 
     dataset_manager = DatasetManager(
         base_dir="./datasets", id_version="0193688e-aa8f-7cbe-9396-bec740a262d0"
@@ -101,6 +102,7 @@ def main():
     yolo_manager.train(config_path, hyperparameters, project_path="./results")
     yolo_manager.evaluate_metrics(config_path)
     yolo_manager.evaluate_model(config_path)
+    yolo_manager.export_model_version(base_model)
 
 
 if __name__ == "__main__":
