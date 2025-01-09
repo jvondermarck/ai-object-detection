@@ -64,6 +64,8 @@ class YOLOManager:
         """
         print("Evaluating the model...")
         print("Config path:", config_path)
+        self.model = YOLO("best.pt")
+        self.add_callbacks()
         self.model.val(data=config_path)
 
     def evaluate_model(self, config_path: str) -> None:
@@ -137,7 +139,7 @@ class YOLOManager:
         def on_val_end(trainer: DetectionValidator):
             metrics = trainer.metrics
             print("Metrics:", metrics)
-            for metric_name, metric_value in metrics.items():
+            for metric_name, metric_value in metrics.results_dict.items():
                 metric_value = float(metric_value)
                 self.experiment.log(metric_name, [metric_value], LogType.LINE)
                 print(f"{metric_name} logged to Picsellia: {metric_value:.3f}")
