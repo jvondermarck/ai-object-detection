@@ -138,7 +138,6 @@ class YOLOManager:
 
         def on_val_end(trainer: DetectionValidator):
             metrics = trainer.metrics
-            print("Metrics:", metrics)
             for metric_name, metric_value in metrics.results_dict.items():
                 metric_value = float(metric_value)
                 self.experiment.log(metric_name, [metric_value], LogType.LINE)
