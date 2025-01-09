@@ -1,13 +1,12 @@
-﻿isort
+﻿argparse
 mypy
+opencv-python
 picsellia
 pillow
 pre-commit
 python-dotenv
 PyYAML
 ruff
+torch
 types-PyYAML
 ultralytics
-
-torch~=2.5.1+cu124
-opencv-python~=4.10.0.84
