@@ -45,6 +45,16 @@ class YOLOManager:
             project_path (str): Path to save training results.
         """
         self.model.train(data=config_path, project=project_path, **hyperparameters)
+        project_path_abs = os.path.abspath(project_path)
+        os.chdir("results")
+        train_list = os.listdir()
+        train_list = [d for d in train_list if d.startswith("train")]
+        train_list.sort(key=lambda x: int(x[5:]) if x[5:] else 0)
+        os.chdir(train_list[-1])
+        args_path = os.path.join(os.getcwd(), "args.yaml")
+        weights_path = os.path.join(os.getcwd(), "weights", "best.pt")
+        os.rename(args_path, os.path.join(project_path_abs, "args.yaml"))
+        os.rename(weights_path, os.path.join(project_path_abs, "best.pt"))
 
     def evaluate_metrics(self, config_path: str) -> None:
         """Evaluates the YOLO model and logs the metrics to Picsellia.
