@@ -99,8 +99,7 @@ def main():
     }
     config_path = os.path.join(dataset_manager.structured_dir, "config.yaml")
     YAMLConfig.save_yaml(config_data, config_path)
-
-    yolo_manager.train(config_path, hyperparameters, project_path="./results")
+    yolo_manager.train(config_path, hyperparameters, project_path=".")
     yolo_manager.evaluate_metrics(config_path)
     yolo_manager.evaluate_model(config_path)
     yolo_manager.export_model_version(base_model)
