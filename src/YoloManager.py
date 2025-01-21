@@ -36,7 +36,7 @@ class YOLOManager:
 
         self.add_callbacks()
 
-    def train(self, config_path: str, hyperparameters: dict, project_path: str) -> None:
+    def train(self, config_path: str, hyperparameters: dict) -> None:
         """Trains the YOLO model.
 
         Args:
@@ -44,17 +44,19 @@ class YOLOManager:
             hyperparameters (dict): Custom hyperparameters for training.
             project_path (str): Path to save training results.
         """
-        self.model.train(data=config_path, project=project_path, **hyperparameters)
-        project_path_abs = os.path.abspath(project_path)
-        os.chdir("results")
-        train_list = os.listdir()
-        train_list = [d for d in train_list if d.startswith("train")]
+        self.model.train(data=config_path, **hyperparameters)
+        self.move_latest_training_files()
+
+    def move_latest_training_files(self) -> None:
+        """Moves the latest training files to the root directory."""
+        results_dir = "results"
+        train_list = [d for d in os.listdir("results") if d.startswith("train")]
         train_list.sort(key=lambda x: int(x[5:]) if x[5:] else 0)
-        os.chdir(train_list[-1])
-        args_path = os.path.join(os.getcwd(), "args.yaml")
-        weights_path = os.path.join(os.getcwd(), "weights", "best.pt")
-        os.rename(args_path, os.path.join(project_path_abs, "args.yaml"))
-        os.rename(weights_path, os.path.join(project_path_abs, "best.pt"))
+        latest_train_dir = os.path.join(results_dir, train_list[-1])
+        args_path = os.path.join(latest_train_dir, "args.yaml")
+        weights_path = os.path.join(latest_train_dir, "weights", "best.pt")
+        os.rename(args_path, "args.yaml")
+        os.rename(weights_path, "best.pt")
 
     def evaluate_metrics(self, config_path: str) -> None:
         """Evaluates the YOLO model and logs the metrics to Picsellia.
