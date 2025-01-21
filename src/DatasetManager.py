@@ -11,8 +11,9 @@ class DatasetManager:
     """Manages the downloading, extraction, and structuring of datasets.
 
     Attributes:
+        client (Client): Picsellia client.
         base_dir (str): Root directory for dataset files.
-        id_version (str): Dataset version identifier.
+        dataset: Picsellia dataset object.
         annotations_dir (str): Directory for extracted annotations.
         structured_dir (str): Structured directory for YOLO.
 
@@ -23,36 +24,42 @@ class DatasetManager:
         structure_data_for_yolo: Structures data for YOLO based on given ratios.
     """
 
-    def __init__(self, base_dir: str, id_version: str) -> None:
+    def __init__(self, client: Client, base_dir: str, id_version: str) -> None:
         """Initializes a dataset manager.
 
         Args:
+            client (Client): Picsellia client.
             base_dir (str): Root directory for the dataset.
             id_version (str): Dataset version identifier.
         """
+        self.client = client
+        self.dataset = client.get_dataset_version_by_id(id_version)
         self.base_dir = base_dir
-        self.id_version = id_version
         self.annotations_dir = os.path.join(base_dir, "annotations")
         self.structured_dir = os.path.join(base_dir, "structured")
 
-    def download_dataset(self, client: Client, dataset_id: str) -> None:
+    def download_dataset(self) -> None:
         """Downloads a dataset from Picsellia.
 
-        Args:
-            client (Client): Picsellia client.
-            dataset_id (str): Dataset identifier.
+        If the dataset is already downloaded, it will not be downloaded again.
         """
-        dataset = client.get_dataset_version_by_id(dataset_id)
-        dataset.list_assets().download(self.base_dir, use_id=True)
 
-    def export_annotations(self, dataset, export_format: AnnotationFileType) -> None:
+        if os.path.exists(self.structured_dir):
+            print(
+                "Structured directory already exists. Data has already been downloaded."
+            )
+            return
+
+        print(f"Downloading {self.dataset.name} dataset...")
+        self.dataset.list_assets().download(self.base_dir, use_id=True)
+
+    def export_annotations(self, export_format: AnnotationFileType) -> None:
         """Exports annotations in a given format.
 
         Args:
-            dataset: Picsellia dataset object.
             export_format (AnnotationFileType): Format for annotation export.
         """
-        dataset.export_annotation_file(
+        self.dataset.export_annotation_file(
             export_format, os.path.join(self.base_dir, "annotations.zip"), use_id=True
         )
 

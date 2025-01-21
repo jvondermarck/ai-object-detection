@@ -61,22 +61,18 @@ def train(dataset_version_id: str, project_id: str):
 
     experiment_name = generate_experiment_name(hyperparameters, dataset_version)
     experiment = get_or_create_experiment(project, dataset_version, experiment_name)
-    print(experiment)
     base_model = client.get_model("Groupe_7")
 
     dataset_manager = DatasetManager(
-        base_dir="./datasets", id_version="0193688e-aa8f-7cbe-9396-bec740a262d0"
+        client, base_dir="./datasets", id_version=dataset_version_id
     )
     yolo_manager = YOLOManager(model_path="yolo11n.pt", experiment=experiment)
 
     # Download dataset
-    dataset_manager.download_dataset(client, dataset_manager.id_version)
+    dataset_manager.download_dataset()
 
     # Structure and export data
-    dataset_manager.export_annotations(
-        client.get_dataset_version_by_id(dataset_manager.id_version),
-        AnnotationFileType.YOLO,
-    )
+    dataset_manager.export_annotations(AnnotationFileType.YOLO)
     dataset_manager.extract_zip()
 
     split_ratios = {"train": 0.6, "val": 0.2, "test": 0.2}
@@ -98,7 +94,7 @@ def train(dataset_version_id: str, project_id: str):
     config_path = os.path.join(dataset_manager.structured_dir, "config.yaml")
     YAMLConfig.save_yaml(config_data, config_path)
 
-    yolo_manager.train(config_path, hyperparameters, project_path=".")
+    yolo_manager.train(config_path, hyperparameters)
     yolo_manager.evaluate_metrics(config_path)
     yolo_manager.evaluate_model(config_path)
     yolo_manager.export_model_version(base_model)

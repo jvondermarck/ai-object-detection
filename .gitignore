@@ -173,4 +173,6 @@ cython_debug/
 # Project specific files
 datasets/
 results/
+runs/
+args.yaml
 *.pt
