@@ -1,0 +1,28 @@
+name: Déployer sur GHCR
+
+on:
+  push: # Déclencher le workflow à chaque push
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v3
+
+      - name: Connexion à GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: jvondermarck
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Construire et déployer l'image Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/jvondermarck/ai-object-detection:latest
