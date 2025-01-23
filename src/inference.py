@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import cv2
 from picsellia import Client
@@ -13,7 +13,14 @@ from src.config import (
 
 
 def initialize_model(model_version_id: str) -> YOLO:
-    """Initialize the YOLO model with Picsellia integration."""
+    """Initialize the YOLO model with Picsellia integration.
+
+    Args:
+        model_version_id: The ID of the model version on Picsellia.
+
+    Returns:
+        The initialized YOLO model.
+    """
     logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
     client = Client(
@@ -27,9 +34,19 @@ def initialize_model(model_version_id: str) -> YOLO:
 
 
 def save_video(
-    frames: List, output_path: str, fps: int = 30, frame_size: tuple = (640, 480)
+    frames: List,
+    output_path: str,
+    fps: int = 30,
+    frame_size: Tuple[int, int] = (640, 480),
 ) -> None:
-    """Save a video from a list of frames."""
+    """Save a video from a list of frames.
+
+    Args:
+        frames: A list of frames to be saved as a video.
+        output_path: The path where the video will be saved.
+        fps: The frames per second of the video. Defaults to 30.
+        frame_size: The size of the video frames (width, height). Defaults to (640, 480).
+    """
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_path, fourcc, fps, frame_size)
     for frame in frames:
@@ -37,8 +54,13 @@ def save_video(
     out.release()
 
 
-def display_bounding_box_info(model: YOLO, results) -> None:
-    """Display bounding box information for detected objects."""
+def display_bounding_box_info(model: YOLO, results: List) -> None:
+    """Display bounding box information for detected objects.
+
+    Args:
+        model: The YOLO model used for inference.
+        results: The results object returned by the model's predict method.
+    """
     if results[0].boxes:
         print("\nDetected objects:")
         for box in results[0].boxes:
@@ -57,7 +79,15 @@ def display_bounding_box_info(model: YOLO, results) -> None:
 def infer_on_image(
     model: YOLO, source: str, output: Union[str, None], conf: float, iou: float
 ) -> None:
-    """Perform inference on a single image."""
+    """Perform inference on a single image.
+
+    Args:
+        model: The YOLO model to use for inference.
+        source: The path to the input image.
+        output: The directory to save the annotated image. If None, defaults to the current directory.
+        conf: The confidence threshold for object detection.
+        iou: The intersection over union (IoU) threshold for non-maximum suppression.
+    """
     frame = cv2.imread(source)
     if frame is None:
         print("Error: Unable to load image.")
@@ -76,7 +106,15 @@ def infer_on_image(
 def infer_on_video(
     model: YOLO, source: str, output: Union[str, None], conf: float, iou: float
 ) -> None:
-    """Perform inference on a video."""
+    """Perform inference on a video.
+
+    Args:
+        model: The YOLO model to use for inference.
+        source: The path to the input video.
+        output: The directory to save the annotated video. If None, defaults to the current directory.
+        conf: The confidence threshold for object detection.
+        iou: The intersection over union (IoU) threshold for non-maximum suppression.
+    """
     cap = cv2.VideoCapture(source)
     if not cap.isOpened():
         print("Error: Unable to open video.")
@@ -87,7 +125,7 @@ def infer_on_video(
         int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
         int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
     )
-    processed_frames = []
+    processed_frames: List = []
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -109,7 +147,14 @@ def infer_on_video(
 def infer_on_webcam(
     model: YOLO, output: Union[str, None], conf: float, iou: float
 ) -> None:
-    """Perform inference using a webcam."""
+    """Perform inference using a webcam.
+
+    Args:
+        model: The YOLO model to use for inference.
+        output: The directory to save the annotated frames. If None, frames will not be saved.
+        conf: The confidence threshold for object detection.
+        iou: The intersection over union (IoU) threshold for non-maximum suppression.
+    """
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Unable to access the webcam.")
@@ -145,7 +190,15 @@ def infer(
     conf: float = 0.5,
     iou: float = 0.45,
 ) -> None:
-    """Perform inference using YOLOv8 with Picsellia integration."""
+    """Perform inference using YOLOv8 with Picsellia integration.
+
+    Args:
+        model_version_id: The ID of the model version on Picsellia.
+        source: The source for inference. Can be a path to an image or video, or 0 for webcam. Defaults to 0.
+        output: The directory to save the output. If None, outputs will be saved in the current directory or displayed on screen for webcam. Defaults to None.
+        conf: The confidence threshold for object detection. Defaults to 0.5.
+        iou: The intersection over union (IoU) threshold for non-maximum suppression. Defaults to 0.45.
+    """
     # Validate output directory
     if output and not os.path.exists(output):
         os.makedirs(output)
