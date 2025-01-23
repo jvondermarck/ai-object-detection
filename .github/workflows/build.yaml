@@ -1,7 +1,11 @@
 name: Déployer sur GHCR
 
 on:
-  push: # Déclencher le workflow à chaque push
+  push:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -11,18 +15,26 @@ jobs:
       packages: write
     steps:
       - name: Checkout du code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Connexion à GHCR
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: jvondermarck
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Construire et déployer l'image Docker
-        uses: docker/build-push-action@v3
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=latest
+
+      - name: "Construire et déployer l'image Docker"
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/jvondermarck/ai-object-detection:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
