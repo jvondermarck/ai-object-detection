@@ -7,6 +7,9 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y python3.11 python3.11-venv python3.11-distutils
 
+# Installer pip pour Python 3.11
+RUN apt-get install -y python3-pip
+
 # Définir les alias pour python3 et pip
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
