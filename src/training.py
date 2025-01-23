@@ -23,16 +23,26 @@ def generate_experiment_name(
 
 
 def get_or_create_experiment(
-    project: Project, dataset_version: DatasetVersion, experiment_name: str
+    project: Project,
+    dataset_version: DatasetVersion,
+    experiment_name: str,
+    hyperparameters: dict,
 ) -> Experiment:
     try:
         experiment = project.get_experiment(name=experiment_name)
         print(f"Using existing experiment: {experiment_name}")
     except ResourceNotFoundError:
-        experiment = project.create_experiment(name=experiment_name)
+        description = f"""
+        This training experiment has been created {hyperparameters['epochs']} epochs, with a batch size of {hyperparameters['batch']} and an image size of {hyperparameters['imgsz']}.
+        Learning rate is set to {hyperparameters['lr0']} with an optimizer of {hyperparameters['optimizer']}.
+        """
+        experiment = project.create_experiment(
+            name=experiment_name, description=description
+        )
         experiment.attach_dataset(
             name=dataset_version.name, dataset_version=dataset_version
         )
+        experiment.log_parameters(hyperparameters)
     return experiment
 
 
@@ -60,7 +70,9 @@ def train(dataset_version_id: str, project_id: str):
     project = client.get_project_by_id(project_id)
 
     experiment_name = generate_experiment_name(hyperparameters, dataset_version)
-    experiment = get_or_create_experiment(project, dataset_version, experiment_name)
+    experiment = get_or_create_experiment(
+        project, dataset_version, experiment_name, hyperparameters
+    )
     base_model = client.get_model("Groupe_7")
 
     dataset_manager = DatasetManager(
