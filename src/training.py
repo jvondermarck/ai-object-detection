@@ -1,16 +1,13 @@
 import hashlib
-import os
 
 from picsellia import Client, DatasetVersion, Experiment, Project
 from picsellia.exceptions import ResourceNotFoundError
-from picsellia.types.enums import AnnotationFileType
 
 from src.config import (
     PICSELLIA_API_TOKEN,
     PICSELLIA_ORGANIZATION_NAME,
 )
 from src.DatasetManager import DatasetManager
-from src.YamlConfig import YAMLConfig
 from src.YoloManager import YOLOManager
 
 
@@ -47,7 +44,6 @@ def get_or_create_experiment(
 
 
 def train(dataset_version_id: str, project_id: str):
-    # Hyperparameters
     hyperparameters = {
         "epochs": 20,
         "batch": 32,
@@ -62,7 +58,6 @@ def train(dataset_version_id: str, project_id: str):
         "close_mosaic": 0,
     }
 
-    # Initialize the client, get project and dataset, create an experiment, attach the dataset to the experiment
     client = Client(
         api_token=PICSELLIA_API_TOKEN, organization_name=PICSELLIA_ORGANIZATION_NAME
     )
@@ -80,33 +75,9 @@ def train(dataset_version_id: str, project_id: str):
     )
     yolo_manager = YOLOManager(model_path="yolo11n.pt", experiment=experiment)
 
-    # Download dataset
-    dataset_manager.download_dataset()
+    dataset_manager.prepare_dataset()
 
-    # Structure and export data
-    dataset_manager.export_annotations(AnnotationFileType.YOLO)
-    dataset_manager.extract_zip()
-
-    split_ratios = {"train": 0.6, "val": 0.2, "test": 0.2}
-    images_dir, labels_dir = dataset_manager.structure_data_for_yolo(split_ratios)
-
-    # Generate the config.yaml file
-    data_yaml = YAMLConfig.load_yaml(
-        os.path.join(dataset_manager.annotations_dir, "data.yaml")
-    )
-    config_data = {
-        "train": os.path.abspath(f"{images_dir.get('train')}"),
-        "val": os.path.abspath(f"{images_dir.get('val')}"),
-        "test": os.path.abspath(f"{images_dir.get('test')}"),
-        "nc": data_yaml.get("nc", 10),
-        "names": data_yaml.get(
-            "names", [f"class{i}" for i in range(data_yaml.get("nc", 10))]
-        ),
-    }
-    config_path = os.path.join(dataset_manager.structured_dir, "config.yaml")
-    YAMLConfig.save_yaml(config_data, config_path)
-
-    yolo_manager.train(config_path, hyperparameters)
-    yolo_manager.evaluate_metrics(config_path)
-    yolo_manager.evaluate_model(config_path)
+    yolo_manager.train(dataset_manager.config_path, hyperparameters)
+    yolo_manager.evaluate_metrics(dataset_manager.config_path)
+    yolo_manager.evaluate_model(dataset_manager.config_path)
     yolo_manager.export_model_version(base_model)
