@@ -11,9 +11,21 @@ from ultralytics.models.yolo.detect import DetectionValidator
 class YOLOManager:
     """Manages the YOLO model and its training process.
 
+    Attributes:
+        model (YOLO): The YOLO model instance.
+        experiment (Experiment): The Picsellia experiment object.
+        results_dir (str): Directory to store the results.
+        train_dir (str): Directory to store the training results.
+        args_path (str): Path to the arguments file.
+        best_weights_path (str): Path to the best weights file.
+
     Methods:
-        configure_hardware: Configures the model to use either GPU or CPU.
+        configure_hardware: Configures the model to use either GPU, MPS, or CPU.
         train: Trains the YOLO model with custom parameters.
+        evaluate_metrics: Evaluates the YOLO model and logs the metrics to Picsellia.
+        evaluate_model: Evaluates the YOLO model and adds the evaluation to the Picsellia experiment.
+        add_callbacks: Adds custom callbacks to the model.
+        export_model_version: Exports the model in the model registry.
     """
 
     def __init__(self, model_path: str, experiment: Experiment) -> None:
@@ -26,7 +38,15 @@ class YOLOManager:
 
         self.model = YOLO(model_path)
         self.experiment = experiment
+        self.results_dir = os.path.join("results", self.experiment.name)
+        self.train_dir = os.path.join(self.results_dir, "train")
+        self.args_path = os.path.join(self.train_dir, "args.yaml")
+        self.best_weights_path = os.path.join(self.train_dir, "weights", "best.pt")
 
+        self.configure_hardware()
+        self.add_callbacks()
+
+    def configure_hardware(self):
         if torch.cuda.is_available():
             self.model.to("cuda")
             return
@@ -34,29 +54,19 @@ class YOLOManager:
         if torch.backends.mps.is_available():
             self.model.to("mps")
 
-        self.add_callbacks()
-
     def train(self, config_path: str, hyperparameters: dict) -> None:
         """Trains the YOLO model.
 
         Args:
             config_path (str): Path to the dataset configuration file.
             hyperparameters (dict): Custom hyperparameters for training.
-            project_path (str): Path to save training results.
         """
-        self.model.train(data=config_path, **hyperparameters)
-        self.move_latest_training_files()
-
-    def move_latest_training_files(self) -> None:
-        """Moves the latest training files to the root directory."""
-        results_dir = "results"
-        train_list = [d for d in os.listdir("results") if d.startswith("train")]
-        train_list.sort(key=lambda x: int(x[5:]) if x[5:] else 0)
-        latest_train_dir = os.path.join(results_dir, train_list[-1])
-        args_path = os.path.join(latest_train_dir, "args.yaml")
-        weights_path = os.path.join(latest_train_dir, "weights", "best.pt")
-        os.rename(args_path, "args.yaml")
-        os.rename(weights_path, "best.pt")
+        self.model.train(
+            data=config_path,
+            project=self.results_dir,
+            exist_ok=True,
+            **hyperparameters,
+        )
 
     def evaluate_metrics(self, config_path: str) -> None:
         """Evaluates the YOLO model and logs the metrics to Picsellia.
@@ -66,9 +76,9 @@ class YOLOManager:
         """
         print("Evaluating the model...")
         print("Config path:", config_path)
-        self.model = YOLO("best.pt")
+        self.model = YOLO(self.best_weights_path)
         self.add_callbacks()
-        self.model.val(data=config_path)
+        self.model.val(data=config_path, project=self.results_dir, exist_ok=True)
 
     def evaluate_model(self, config_path: str) -> None:
         """Evaluates the YOLO model and adds the evaluation to the Picsellia experiment.
@@ -82,7 +92,7 @@ class YOLOManager:
         # Retrieve the labels from the Picsellia dataset
         picsellia_labels_name = testing_dataset.list_labels()
         label_matching = {k.name: k for k in picsellia_labels_name}
-        model = YOLO("best.pt")
+        model = YOLO(self.best_weights_path)
 
         # Load the configuration file
         with open(config_path, "r") as file:
@@ -151,5 +161,5 @@ class YOLOManager:
     def export_model_version(self, base_model: Model) -> None:
         """Exports the model in the model registry."""
         new_model = self.experiment.export_in_existing_model(base_model)
-        new_model.store("config", "args.yaml")
-        new_model.store("model", "best.pt")
+        new_model.store("config", self.args_path)
+        new_model.store("model", self.best_weights_path)

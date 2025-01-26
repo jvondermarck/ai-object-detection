@@ -1,10 +1,11 @@
 import os
-import random
 import shutil
 import zipfile
 
 from picsellia import Client
 from picsellia.types.enums import AnnotationFileType
+
+from src.YamlConfig import YAMLConfig
 
 
 class DatasetManager:
@@ -14,15 +15,22 @@ class DatasetManager:
         client (Client): Picsellia client.
         base_dir (str): Root directory for dataset files.
         dataset: Picsellia dataset object.
-        annotations_dir (str): Directory for extracted annotations.
-        structured_dir (str): Structured directory for YOLO.
+        images_dir (str): Directory for image files.
+        labels_dir (str): Directory for label files.
+        config_path (str): Path to the configuration file.
 
     Methods:
-        download_dataset: Downloads a dataset via Picsellia.
-        export_annotations: Exports annotations in a specific format.
-        extract_zip: Extracts ZIP files found in the base directory.
-        structure_data_for_yolo: Structures data for YOLO based on given ratios.
+        prepare_dataset: Prepares the dataset for training.
+        _download_assets: Downloads assets from Picsellia.
+        _export_annotations: Exports annotations in a given format.
+        _export_annotation_file: Exports the annotation file from the dataset.
+        _extract_annotation_file: Extracts the annotation file to the labels directory.
+        _structure_annotations: Structures annotations into split directories.
+        _generate_config_file: Generates a configuration file for YOLO.
     """
+
+    RANDOM_SEED = 42
+    SPLIT_RATIOS = [0.6, 0.2, 0.2]
 
     def __init__(self, client: Client, base_dir: str, id_version: str) -> None:
         """Initializes a dataset manager.
@@ -35,145 +43,92 @@ class DatasetManager:
         self.client = client
         self.dataset = client.get_dataset_version_by_id(id_version)
         self.base_dir = base_dir
-        self.annotations_dir = os.path.join(base_dir, "annotations")
-        self.structured_dir = os.path.join(base_dir, "structured")
+        self.images_dir = os.path.join(base_dir, "images")
+        self.labels_dir = os.path.join(base_dir, "labels")
+        self.config_path = os.path.join(base_dir, "config.yaml")
 
-    def download_dataset(self) -> None:
-        """Downloads a dataset from Picsellia.
+    def prepare_dataset(self) -> None:
+        """Prepares the dataset for training."""
+        self._download_assets()
+        self._export_annotations()
+        self._generate_config_file()
 
-        If the dataset is already downloaded, it will not be downloaded again.
+    def _download_assets(self) -> None:
+        """Downloads assets from Picsellia.
+
+        Dataset is split into train, test, and validation sets.
+        Each split is downloaded to a separate directory.
         """
-
-        if os.path.exists(self.structured_dir):
-            print(
-                "Structured directory already exists. Data has already been downloaded."
-            )
+        if os.path.exists(self.config_path):
+            print("Dataset has already been downloaded. Skipping...")
             return
 
-        print(f"Downloading {self.dataset.name} dataset...")
-        self.dataset.list_assets().download(self.base_dir, use_id=True)
-
-    def export_annotations(self, export_format: AnnotationFileType) -> None:
-        """Exports annotations in a given format.
-
-        Args:
-            export_format (AnnotationFileType): Format for annotation export.
-        """
-        self.dataset.export_annotation_file(
-            export_format, os.path.join(self.base_dir, "annotations.zip"), use_id=True
+        (
+            train_assets,
+            test_assets,
+            val_assets,
+            count_train,
+            count_test,
+            count_val,
+            labels,
+        ) = self.dataset.train_test_val_split(
+            ratios=self.SPLIT_RATIOS, random_seed=self.RANDOM_SEED
         )
 
-    def extract_zip(self) -> None:
-        """Extracts ZIP files found in the base directory.
+        train_assets.download(os.path.join(self.images_dir, "train"), use_id=True)
+        test_assets.download(os.path.join(self.images_dir, "test"), use_id=True)
+        val_assets.download(os.path.join(self.images_dir, "val"), use_id=True)
 
-        Raises:
-            FileNotFoundError: If no ZIP file is found.
+    def _export_annotations(self) -> None:
+        """Exports annotations in a given format, structured for YOLO."""
+        annotation_file = self._export_annotation_file()
+        self._extract_annotation_file(annotation_file)
+        self._structure_annotations()
+
+    def _export_annotation_file(self) -> str:
+        """Exports the annotation file from the dataset.
+
+        Returns:
+            str: Path to the exported annotation file.
         """
-        zip_file = self._find_zip_file()
-        if zip_file != "":
-            os.makedirs(self.annotations_dir, exist_ok=True)
-            with zipfile.ZipFile(zip_file, "r") as zip_ref:
-                zip_ref.extractall(self.annotations_dir)
-            os.remove(zip_file)
-        else:
-            raise FileNotFoundError("No ZIP archive found.")
+        return self.dataset.export_annotation_file(
+            AnnotationFileType.YOLO, self.base_dir, use_id=True
+        )
 
-    def structure_data_for_yolo(self, split_ratios: dict) -> tuple[dict, dict]:
-        """Structures data for the YOLO model.
+    def _extract_annotation_file(self, annotation_file: str) -> None:
+        """Extracts the annotation file to the labels directory.
 
         Args:
-            split_ratios (dict): Ratios for splitting data (train, val, test).
-
-        Returns:
-            tuple: Paths to the image and label directories for each split.
+            annotation_file (str): Path to the annotation file.
         """
-        os.makedirs(self.structured_dir, exist_ok=True)
-        images_dir, labels_dir = self._prepare_directories()
-        paired_files = self._pair_images_and_labels()
+        with zipfile.ZipFile(annotation_file, "r") as zip_ref:
+            zip_ref.extractall(self.labels_dir)
+        annotation_file_grandparent = os.path.dirname(os.path.dirname(annotation_file))
+        shutil.rmtree(annotation_file_grandparent)
 
-        splits = self._split_data(paired_files, split_ratios)
-        for split, files in splits.items():
-            for img, lbl in files:
+    def _structure_annotations(self) -> None:
+        """Structures annotations into split directories."""
+        for split in ["train", "test", "val"]:
+            split_dir = os.path.join(self.labels_dir, split)
+            os.makedirs(split_dir, exist_ok=True)
+            for file in os.listdir(os.path.join(self.images_dir, split)):
+                file_id = file.split(".")[0]
                 shutil.move(
-                    os.path.join(self.base_dir, img),
-                    os.path.join(images_dir[split], img),
-                )
-                shutil.move(
-                    os.path.join(self.annotations_dir, lbl),
-                    os.path.join(labels_dir[split], lbl),
+                    os.path.join(self.labels_dir, f"{file_id}.txt"),
+                    os.path.join(self.labels_dir, split, f"{file_id}.txt"),
                 )
 
-        return images_dir, labels_dir
-
-    def _find_zip_file(self) -> str:
-        """Searches for a ZIP file in the base directory.
-
-        Returns:
-            str: Path to the ZIP file, or an empty string if not found.
-        """
-        for root, _, files in os.walk(self.base_dir):
-            for file in files:
-                if file.endswith(".zip"):
-                    return os.path.join(root, file)
-        return ""
-
-    def _prepare_directories(self) -> tuple[dict, dict]:
-        """Prepares directories for images and labels.
-
-        Returns:
-            tuple: Dictionaries containing paths to image and label directories.
-        """
-        images_dir = {
-            split: os.path.join(self.structured_dir, "images", split)
-            for split in ["train", "val", "test"]
-        }
-        labels_dir = {
-            split: os.path.join(self.structured_dir, "labels", split)
-            for split in ["train", "val", "test"]
+    def _generate_config_file(self) -> None:
+        """Generates a configuration file for YOLO."""
+        data_yaml = YAMLConfig.load_yaml(os.path.join(self.labels_dir, "data.yaml"))
+        config_data = {
+            "train": os.path.abspath(f"{self.images_dir}/train"),
+            "val": os.path.abspath(f"{self.images_dir}/val"),
+            "test": os.path.abspath(f"{self.images_dir}/test"),
+            "nc": data_yaml.get("nc", 10),
+            "names": data_yaml.get(
+                "names", [f"class{i}" for i in range(data_yaml.get("nc", 10))]
+            ),
         }
 
-        for directory in images_dir.values():
-            os.makedirs(directory, exist_ok=True)
-        for directory in labels_dir.values():
-            os.makedirs(directory, exist_ok=True)
-
-        return images_dir, labels_dir
-
-    def _pair_images_and_labels(self) -> list[tuple[str, str]]:
-        """Pairs images with their corresponding label files.
-
-        Returns:
-            list: List of tuples containing image and label file names.
-        """
-        image_files = [
-            f
-            for f in os.listdir(self.base_dir)
-            if f.lower().endswith((".jpg", ".jpeg", ".png"))
-        ]
-        label_files = [
-            f for f in os.listdir(self.annotations_dir) if f.endswith(".txt")
-        ]
-
-        image_to_label = {img: img.rsplit(".", 1)[0] + ".txt" for img in image_files}
-        return [(img, lbl) for img, lbl in image_to_label.items() if lbl in label_files]
-
-    def _split_data(self, paired_files, split_ratios) -> dict:
-        """Splits data into splits (train, val, test).
-
-        Args:
-            paired_files (list): List of (image, label) tuples.
-            split_ratios (dict): Ratios for each split.
-
-        Returns:
-            dict: Dictionary containing splits and associated files.
-        """
-        random.shuffle(paired_files)
-        n_total = len(paired_files)
-        n_train = int(n_total * split_ratios["train"])
-        n_val = int(n_total * split_ratios["val"])
-
-        return {
-            "train": paired_files[:n_train],
-            "val": paired_files[n_train : n_train + n_val],
-            "test": paired_files[n_train + n_val :],
-        }
+        YAMLConfig.save_yaml(config_data, self.config_path)
