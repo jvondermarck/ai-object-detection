@@ -3,7 +3,7 @@ import os
 import torch
 import yaml
 from picsellia import Experiment, Model, ModelVersion
-from picsellia.types.enums import AddEvaluationType, InferenceType, LogType
+from picsellia.types.enums import AddEvaluationType, Framework, InferenceType, LogType
 from ultralytics import YOLO
 from ultralytics.models.yolo.detect import DetectionTrainer, DetectionValidator
 
@@ -161,6 +161,9 @@ class YOLOManager:
     def export_model_version(self, base_model: Model) -> None:
         """Exports the model in the model registry."""
         new_model = self.experiment.export_in_existing_model(base_model)
+        new_model.update(
+            type=InferenceType.OBJECT_DETECTION, framework=Framework.PYTORCH
+        )
         self.store_training_data(new_model)
         self.experiment.attach_model_version(new_model)
 
