@@ -5,7 +5,7 @@ import yaml
 from picsellia import Experiment, Model
 from picsellia.types.enums import AddEvaluationType, InferenceType, LogType
 from ultralytics import YOLO
-from ultralytics.models.yolo.detect import DetectionValidator
+from ultralytics.models.yolo.detect import DetectionTrainer, DetectionValidator
 
 
 class YOLOManager:
@@ -142,7 +142,7 @@ class YOLOManager:
     def add_callbacks(self) -> None:
         """Adds custom callbacks to the model."""
 
-        def on_train_epoch_end(trainer):
+        def on_train_epoch_end(trainer: DetectionTrainer):
             metrics = trainer.metrics
             for metric_name, metric_value in metrics.items():
                 self.experiment.log(metric_name, [metric_value], LogType.LINE)
