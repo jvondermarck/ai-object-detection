@@ -2,7 +2,7 @@ import os
 
 import torch
 import yaml
-from picsellia import Experiment, Model
+from picsellia import Experiment, Model, ModelVersion
 from picsellia.types.enums import AddEvaluationType, InferenceType, LogType
 from ultralytics import YOLO
 from ultralytics.models.yolo.detect import DetectionTrainer, DetectionValidator
@@ -161,5 +161,15 @@ class YOLOManager:
     def export_model_version(self, base_model: Model) -> None:
         """Exports the model in the model registry."""
         new_model = self.experiment.export_in_existing_model(base_model)
-        new_model.store("config", self.args_path)
-        new_model.store("model", self.best_weights_path)
+        self.store_training_data(new_model)
+        self.experiment.attach_model_version(new_model)
+
+    def store_training_data(self, model_version: ModelVersion) -> None:
+        """Stores the training data in the model version."""
+        model_version.store("config", self.args_path)
+        model_version.store("model", self.best_weights_path)
+
+        for file in os.listdir(self.train_dir):
+            if not file.endswith(".png"):
+                continue
+            model_version.store(file.split(".")[0], os.path.join(self.train_dir, file))
