@@ -33,6 +33,7 @@ def main() -> None:
 
 
 def add_subparsers(parser: ArgumentParser) -> None:
+    """Add subparsers (train and infer) to the given parser."""
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # Add train subparser
