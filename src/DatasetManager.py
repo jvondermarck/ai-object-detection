@@ -49,6 +49,10 @@ class DatasetManager:
 
     def prepare_dataset(self) -> None:
         """Prepares the dataset for training."""
+        if os.path.exists(self.config_path):
+            print("Dataset has already been downloaded. Skipping...")
+            return
+
         self._download_assets()
         self._export_annotations()
         self._generate_config_file()
@@ -59,10 +63,6 @@ class DatasetManager:
         Dataset is split into train, test, and validation sets.
         Each split is downloaded to a separate directory.
         """
-        if os.path.exists(self.config_path):
-            print("Dataset has already been downloaded. Skipping...")
-            return
-
         (
             train_assets,
             test_assets,
