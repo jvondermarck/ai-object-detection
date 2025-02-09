@@ -15,3 +15,4 @@ def get_required_env(name: str) -> str:
 
 PICSELLIA_API_TOKEN = get_required_env("PICSELLIA_API_TOKEN")
 PICSELLIA_ORGANIZATION_NAME = get_required_env("PICSELLIA_ORGANIZATION_NAME")
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
