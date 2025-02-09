@@ -1,11 +1,12 @@
 import os
 
 import torch
-import yaml
 from picsellia import Experiment, Model, ModelVersion
 from picsellia.types.enums import AddEvaluationType, Framework, InferenceType, LogType
 from ultralytics import YOLO
 from ultralytics.models.yolo.detect import DetectionTrainer, DetectionValidator
+
+from src.YamlConfig import YAMLConfig
 
 
 class YOLOManager:
@@ -95,8 +96,7 @@ class YOLOManager:
         model = YOLO(self.best_weights_path)
 
         # Load the configuration file
-        with open(config_path, "r") as file:
-            config_yaml = yaml.safe_load(file)
+        config_yaml = YAMLConfig.load_yaml(config_path)
 
         test_images_dir = config_yaml["test"]
 
