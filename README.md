@@ -1,4 +1,8 @@
-﻿# AI Project - Image detection
+
+<div align="center">
+   <h1>﻿AI Project - Image detection</h1>
+  <img src="https://github.com/user-attachments/assets/d6280133-aa3b-4f1f-9189-da8e73a0497c" alt="AI Image Detection">
+</div>
 
 ## Introduction
 
