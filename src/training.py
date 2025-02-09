@@ -1,4 +1,5 @@
 import hashlib
+import os
 
 from picsellia import Client, DatasetVersion, Experiment, Project
 from picsellia.exceptions import ResourceNotFoundError
@@ -6,6 +7,7 @@ from picsellia.exceptions import ResourceNotFoundError
 from src.config import (
     PICSELLIA_API_TOKEN,
     PICSELLIA_ORGANIZATION_NAME,
+    ROOT_DIR,
 )
 from src.DatasetManager import DatasetManager
 from src.YoloManager import YOLOManager
@@ -83,7 +85,9 @@ def train(dataset_version_id: str, project_id: str):
     base_model = client.get_model("Groupe_7")
 
     dataset_manager = DatasetManager(
-        client, base_dir="./datasets", id_version=dataset_version_id
+        client,
+        base_dir=os.path.join(ROOT_DIR, "datasets"),
+        id_version=dataset_version_id,
     )
     yolo_manager = YOLOManager(model_path="yolo11n.pt", experiment=experiment)
 
